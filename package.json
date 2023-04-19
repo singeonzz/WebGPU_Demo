@@ -1,0 +1,35 @@
+{
+    "name": "WebGPUtest",
+    "version": "1.0.0",
+    "description": "A layouts library in JavaScript.",
+    "homepage": "",
+    "main": "index.js",
+    "author": "cl",
+    "license": "MIT",
+    "scripts": {
+        "examples": "webpack serve --config ./examples/webpack.config.js --progress"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.173",
+        "@webgpu/types": "^0.1.30",
+        "dat.gui": "^0.7.7",
+        "eslint": "^8.10.0",
+        "html-webpack-plugin": "^5.3.1",
+        "prettier": "^2.5.1",
+        "raw-loader": "^4.0.2",
+        "replace": "^1.2.1",
+        "rimraf": "^3.0.2",
+        "ts-loader": "^9.2.5",
+        "typescript": "^4.4.2",
+        "webpack": "^5.37.1",
+        "webpack-cli": "^4.7.0",
+        "webpack-dev-server": "^3.11.2"
+    },
+    "dependencies": {
+        "@webgpu/types": "^0.1.30",
+        "3d-view-controls": "^2.2.2",
+        "gl-matrix": "^3.4.3",
+        "lodash": "^4.17.21",
+        "worker-loader": "^3.0.8"
+    }
+}
