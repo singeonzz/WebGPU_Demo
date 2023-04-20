@@ -77,7 +77,7 @@ export const CheckWebGPU = () => {
 };
 
 /**
- * 创建GPUBuffer
+ * 创建GPUBuffer f32
  * @param device
  * @param data
  * @param usageFlag
@@ -97,6 +97,27 @@ export const CreateGPUBuffer = (
         mappedAtCreation: true,
     });
     new Float32Array(buffer.getMappedRange()).set(data);
+    buffer.unmap();
+    return buffer;
+};
+
+/**
+ * 创建GPUBuffer u32
+ * @param device 
+ * @param data 
+ * @param usageFlag 
+ * @returns 
+ */
+export const CreateGPUBufferUint = (
+    device: GPUDevice, 
+    data: Uint32Array, 
+    usageFlag = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) => {
+    const buffer = device.createBuffer({
+        size: data.byteLength,
+        usage: usageFlag,
+        mappedAtCreation: true
+    });
+    new Uint32Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
     return buffer;
 };
