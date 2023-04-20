@@ -2,19 +2,25 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-20 08:48:26
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-20 09:58:22
+ * @LastEditTime: 2023-04-20 15:45:42
  * @FilePath: \webgpu\WebGPU_Demo\examples\instance.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
 import { mat4, vec3 } from "gl-matrix";
-import { CreateAnimation, CreateGPUBuffer, CreateGPUBufferUint, CreateViewProjection } from "../src/utils";
+import {
+    CreateAnimation,
+    CreateGPUBuffer,
+    CreateGPUBufferUint,
+    CreateViewProjection,
+    GetTexture,
+} from "../src/utils";
 
-const nx = 10;
-const ny = 10;
+const nx = 2;
+const ny = 2;
 const ni = nx * ny;
 
-const shader = `
+const vertex = `
     struct Uniforms {
         mvpMatrix : array<mat4x4<f32>,${ni}>,
     };
@@ -24,6 +30,7 @@ const shader = `
     struct Output {
         @builtin(position) Position : vec4<f32>,
         @location(0) vCoord : vec2<f32>,
+        @location(1) vUV : vec2<f32>
     };
 
     @vertex
@@ -31,18 +38,34 @@ const shader = `
         @builtin(instance_index) instanceIdx : u32, 
         @location(0) pos: vec4<f32>, 
         @location(1) coord : vec2<f32>,
+        @location(2) uv: vec2<f32>
     ) -> Output {
         var output: Output;
         output.Position = uniforms.mvpMatrix[instanceIdx] * pos;
         output.vCoord = coord;
+        output.vUV = uv;
         return output;
     }
+    `;
+
+const fragment = `
+    // 纹理属性
+    @binding(1) @group(0) var textureSampler: sampler;
+    @binding(2) @group(0) var textureData: texture_2d<f32>;
+
+    struct Input {
+        @location(0) vCoord : vec2<f32>,
+        @location(1) vUV : vec2<f32>
+    };
 
     @fragment
     fn fs_main(
-        in: Output
+        in: Input
     ) -> @location(0) vec4<f32> {
         
+        // 获取纹理
+        let textureColor:vec3<f32> = (textureSample(textureData, textureSampler, in.vUV)).rgb;
+
         let coord = in.vCoord;
 
         let r = dot(coord, coord);
@@ -51,21 +74,22 @@ const shader = `
             discard;
         }
 
-        return vec4<f32>(1.0,0.0,0.0,1.0);
+        return vec4<f32>(textureColor,1.0);
+        // return vec4<f32>(1.0, 0.0, 0.0, 1.0);
     }
 `;
 
 const vertexData = new Float32Array([
-    -1,-1,1,-1,-1, // vertex a, index 0
-    1,-1,1,1,-1, // vertex b, index 1
-    1,1,1,1,1, // vertex c, index 2
-    -1,1,1,-1,1, // vertex d, index 3
+    -1,-1,1,  -1,-1,  0, 0, // vertex a, index 0
+
+    1,-1,1,   1,-1,   1, 0, // vertex b, index 1
+    
+    1,1,1,    1,1,    1, 1, // vertex c, index 2
+
+    -1,1,1,    -1,1,   0, 1, // vertex d, index 3
 ]);
 
-const indexData = new Uint32Array([
-    0, 1, 2, 
-    2, 3, 0
-]);
+const indexData = new Uint32Array([0, 1, 2, 2, 3, 0]);
 
 const instanceTest = async () => {
     if (!navigator.gpu) {
@@ -89,54 +113,41 @@ const instanceTest = async () => {
 
     const vertexBuffer = CreateGPUBuffer(device, vertexData);
     const indexBuffer = CreateGPUBufferUint(device, indexData);
-    const queue = device.queue;
     const numberOfVertices = indexData.length;
-
-    const bindGroupLayout = device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                buffer: {
-                    type: "uniform",
-                    minBindingSize: 4 * 16,
-                },
-            },
-        ],
-    });
-
-    const pipelineLayout = device.createPipelineLayout({
-        bindGroupLayouts: [bindGroupLayout],
-    });
 
     const pipeline = device.createRenderPipeline({
         layout: "auto",
         vertex: {
             module: device.createShaderModule({
-                code: shader,
+                code: vertex,
             }),
             entryPoint: "vs_main",
             buffers: [
                 {
-                    arrayStride: 4 * 5,
+                    arrayStride: 4 * 7,
                     attributes: [
                         {
                             shaderLocation: 0,
                             format: "float32x3",
                             offset: 0,
-                        },
+                        }, // 点坐标
                         {
                             shaderLocation: 1,
                             format: "float32x2",
                             offset: 12,
-                        },
+                        }, // coord
+                        {
+                            shaderLocation: 2,
+                            format: "float32x2",
+                            offset: 20,
+                        }, // 纹理
                     ],
                 },
             ],
         },
         fragment: {
             module: device.createShaderModule({
-                code: shader,
+                code: fragment,
             }),
             entryPoint: "fs_main",
             targets: [
@@ -164,6 +175,9 @@ const instanceTest = async () => {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
+    // 创建并获取纹理
+    const ts = await GetTexture(device, "multiple.png");
+
     const uniformBindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
@@ -173,6 +187,14 @@ const instanceTest = async () => {
                     buffer: uniformBuffer,
                 },
             },
+            {
+                binding: 1,
+                resource: ts.sampler
+            },
+            {
+                binding: 2,
+                resource: ts.texture.createView()
+            }         
         ],
     });
 
@@ -189,7 +211,11 @@ const instanceTest = async () => {
             mat4.translate(
                 modelMat[i],
                 modelMat[i],
-                vec3.fromValues((x - nx / 2 + 0.5) * 2, (y - ny / 2 + 0.5) * 2, 0)
+                vec3.fromValues(
+                    (x - nx / 2 + 0.5) * 2,
+                    (y - ny / 2 + 0.5) * 2,
+                    0
+                )
             );
             i++;
         }
@@ -221,7 +247,9 @@ const instanceTest = async () => {
             depthStoreOp: "store",
         },
     } as any;
+
     let rotation = vec3.fromValues(0, 0, 0);
+
     function draw() {
         let m = 0,
             i = 0;
@@ -266,9 +294,10 @@ const instanceTest = async () => {
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, uniformBindGroup);
         renderPass.setVertexBuffer(0, vertexBuffer);
-        // renderPass.setVertexBuffer(1, coordBuffer);
         renderPass.setIndexBuffer(indexBuffer, "uint32");
         renderPass.drawIndexed(numberOfVertices, ni);
+        // renderPass.draw(numberOfVertices);
+
         renderPass.end();
 
         device.queue.submit([commandEncoder.finish()]);
