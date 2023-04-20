@@ -2,7 +2,7 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-19 13:39:16
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-20 09:46:49
+ * @LastEditTime: 2023-04-20 10:53:40
  * @FilePath: \webgpu\WebGPU\examples\webpack.config.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -13,27 +13,31 @@ const path = require('path')
 const EXAMPLES = {
     triangleTest: {
         id: 'triangleTest',
-        title: 'triangleTest',
+        title: '基础的三角形',
     },
     circleTest: {
         id: 'circleTest',
-        title: 'circleTest',
+        title: '绘制圆',
     },
     computeTest: {
         id: 'computeTest',
-        title: 'computeTest',
+        title: '使用@computer计算菲波那切数列',
     },
     instanceTest: {
         id: 'instanceTest',
-        title: 'instanceTest',
+        title: '实例',
     },
     animationTest: {
         id: 'animationTest',
-        title: 'animationTest',
+        title: '多数据动画',
     },
     textureTest: {
         id: 'textureTest',
-        title: 'textureTest',
+        title: '纹理',
+    },
+    multipleTexturesTest: {
+        id: 'multipleTexturesTest',
+        title: '多纹理',
     },
 }
 

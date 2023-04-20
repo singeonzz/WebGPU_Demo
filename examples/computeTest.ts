@@ -2,7 +2,7 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-20 08:51:42
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-20 09:40:43
+ * @LastEditTime: 2023-04-20 10:55:25
  * @FilePath: \webgpu\WebGPU_Demo\examples\computeTest.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -32,15 +32,23 @@ const shader = `
         @builtin(local_invocation_id)
         local_id : vec3u,
     ) {
-        var a = 0.;
-        var b = 1.;
-        var ans = 0.;
-        for(var i:i32 = 0;i <i32(local_id.x);i++){
-            ans = a+b;
-            a = b;
-            b = ans;
+
+        if(local_id.x == 0 || local_id.x == 1){
+            output[global_id.x] = 1;
         }
-        output[global_id.x] = ans;
+            
+        else {
+            var a = 0.;
+            var b = 1.;
+            var ans = 0.;
+            for(var i:i32 = 0;i <i32(local_id.x);i++){
+                ans = a+b;
+                a = b;
+                b = ans;
+            }
+            output[global_id.x] = ans;
+        }
+    
     }
 `;
 
