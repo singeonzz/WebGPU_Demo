@@ -29,6 +29,7 @@
         "@webgpu/types": "^0.1.30",
         "3d-view-controls": "^2.2.2",
         "gl-matrix": "^3.4.3",
+        "interpolate-arrays": "^1.0.4",
         "lodash": "^4.17.21",
         "worker-loader": "^3.0.8"
     }
