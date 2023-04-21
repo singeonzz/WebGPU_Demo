@@ -56,7 +56,7 @@ const fragment = `
 const largeInstance = async () => {
     const gpu = await InitGPU();
     const device = gpu.device;
-    const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+    // const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
     const bindGroupLayout = device.createBindGroupLayout({
         entries: [
