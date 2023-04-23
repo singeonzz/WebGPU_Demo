@@ -2,91 +2,14 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-21 13:43:43
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-21 15:04:10
+ * @LastEditTime: 2023-04-23 15:25:54
  * @FilePath: \webgpu\WebGPU_Demo\examples\bezierLine.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
 import { CreateGPUBuffer, InitGPU } from "../src/utils";
-import { create3DBezier } from "../src/utils/bezier";
+import { calcLine } from "../src/utils/bezier";
 
-const calcLine = (
-    source = { x: 0.8, y: 0 },
-    control = { x: 0, y: 0.5 },
-    target = { x: -0.8, y: 0 }
-) => {
-    // 计算贝塞尔曲线坐标
-    let normalizePath = create3DBezier(source, control, target, 20, 1.0);
-
-    // 计算法向量
-    let attrNormal: number[] = [],
-        attrMiter: number[] = [],
-        attrPoint: number[] | null = [];
-
-    for (let i = 0, lens = normalizePath.length; i < lens; i++) {
-        let x1, x2, y1, y2;
-        if (i == lens - 1) {
-            x2 = normalizePath[i][0];
-            y2 = normalizePath[i][1];
-            x1 = normalizePath[i - 1][0];
-            y1 = normalizePath[i - 1][1];
-        } else {
-            x1 = normalizePath[i][0];
-            y1 = normalizePath[i][1];
-            x2 = normalizePath[i + 1][0];
-            y2 = normalizePath[i + 1][1];
-        }
-        const dx = x2 - x1,
-            dy = y2 - y1;
-        let len = dx * dx + dy * dy,
-            n1 = 0,
-            n2 = 0;
-
-        if (len) {
-            len = 1 / Math.sqrt(len);
-            n1 = -dy * len;
-            n2 = dx * len;
-        }
-
-        let rx = i * 4;
-        let item = normalizePath[i];
-
-        // 用于计算矩阵的点
-        attrPoint[rx] = item[0];
-        attrPoint[rx + 1] = item[1];
-        attrPoint[rx + 2] = item[0];
-        attrPoint[rx + 3] = item[1];
-
-        let norm = [n1, n2];
-        let miter = -1;
-        // 法向量
-        attrNormal[rx] = norm[0];
-        attrNormal[rx + 1] = norm[1];
-        attrNormal[rx + 2] = norm[0];
-        attrNormal[rx + 3] = norm[1];
-        // 斜接
-        let ry = i * 2;
-        attrMiter[ry] = -miter;
-        attrMiter[ry + 1] = miter;
-    }
-
-    let MatArray: any = [],
-        width = 0.05;
-
-    for (let i = 0, j = 0; i < attrPoint.length; i += 2, j += 1) {
-        MatArray[i] =
-            Math.ceil(
-                (attrPoint[i] + attrNormal[i] * width * attrMiter[j]) * 1e3
-            ) / 1e3;
-        MatArray[i + 1] =
-            Math.ceil(
-                (attrPoint[i + 1] + attrNormal[i + 1] * width * attrMiter[j]) *
-                    1e3
-            ) / 1e3;
-    }
-
-    return MatArray;
-};
 
 // 顶点着色器
 const vertex = `

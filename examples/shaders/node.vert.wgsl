@@ -6,11 +6,11 @@ struct Uniforms {
 @binding(0) @group(0) var<uniform> uniforms: Uniforms;
 
 struct outPut {
-        @builtin(position) Position: vec4<f32>,
-        @location(0) vCoord: vec2<f32>
-    }
+    @builtin(position) Position: vec4<f32>,
+    @location(0) vCoord: vec2<f32>
+}
 
-    @vertex
+@vertex
 fn vert_main(
     @location(0) position: vec4<f32>,
     @location(1) coord: vec2<f32>,
