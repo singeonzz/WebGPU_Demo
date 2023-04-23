@@ -37,16 +37,27 @@ const vertex = `
 `;
 
 const fragment = `
+
+    fn circle(
+        st: vec2<f32>,
+        radius: f32
+    ) -> f32 {
+        var dist: vec2<f32> = st - vec2(0.5);
+        return 1.0 - smoothstep(
+            radius - (radius * 0.01),
+            radius + (radius * 0.01),
+            dot(dist, dist) * 4.0);
+    }
+
     @fragment
     fn frag_main(
         @location(0) vCoord: vec2<f32>
     ) -> @location(0) vec4<f32> {
         let coord = vCoord;
 
-        let r = dot(coord, coord);
-
-        if (r > 0.95) {
+        if (circle(coord, 1.0) < 0.5) {
             discard;
+            // return vec4(1.0, 1.0, 1.0, 1.0);
         }
 
         return vec4(1.0, 0.0, 0.0, 1.0);
@@ -122,11 +133,11 @@ const largeInstance = async () => {
             cullMode: "none",
         },
         // 深度模板
-        // depthStencil: {
-        //     format: "depth24plus",
-        //     depthWriteEnabled: true,
-        //     depthCompare: "less",
-        // },
+        depthStencil: {
+            format: "depth24plus",
+            depthWriteEnabled: true,
+            depthCompare: "less",
+        },
     };
 
     // 管线
@@ -137,18 +148,13 @@ const largeInstance = async () => {
     });
 
     const vertexData = new Float32Array([
-        -0.1, -0.1, -1, -1, 
-        0.1, -0.1, 1, -1, 
-        -0.1, 0.1, -1, 1,
+        -0.1, -0.1, 0, 0, 
+        0.1, -0.1, 1, 0, 
+        -0.1, 0.1, 0, 1,
 
-        -0.1, 0.1, -1, 1, 
-        0.1, -0.1, 1, -1, 
+        -0.1, 0.1, 0, 1, 
+        0.1, -0.1, 1, 0, 
         0.1, 0.1, 1, 1,
-
-        // -0.1, -0.1, -1, -1, 
-        // 0.1, -0.1, 1, -1, 
-        // -0.1, 0.1, -1, 1,
-        // 0.1, 0.1, 1, 1,
     ]);
 
     
@@ -232,6 +238,7 @@ const largeInstance = async () => {
             }
         }
 
+
         let startTime: number | undefined = undefined;
 
         const depthTexture = device.createTexture({
@@ -249,12 +256,12 @@ const largeInstance = async () => {
                     storeOp: "store",
                 },
             ],
-            // depthStencilAttachment: {
-            //     view: depthTexture.createView(),
-            //     depthClearValue: 1.0,
-            //     depthLoadOp: "clear",
-            //     depthStoreOp: "store",
-            // },
+            depthStencilAttachment: {
+                view: depthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: "clear",
+                depthStoreOp: "store",
+            },
         } as any;
 
         // const renderBundleEncoder = device.createRenderBundleEncoder({
