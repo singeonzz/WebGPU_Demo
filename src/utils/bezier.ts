@@ -2,7 +2,7 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-21 13:56:05
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-21 13:56:11
+ * @LastEditTime: 2023-04-23 15:31:32
  * @FilePath: \webgpu\WebGPU_Demo\src\utils\bezier.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -84,10 +84,11 @@ export const calcLine = (
     source = { x: 0.8, y: 0 },
     control = { x: 0, y: 0.5 },
     target = { x: -0.8, y: 0 },
-    width = 0.05
+    width = 0.05,
+    num = 20
 ) => {
     // 计算贝塞尔曲线坐标
-    let normalizePath = create3DBezier(source, control, target, 20, 1.0);
+    let normalizePath = create3DBezier(source, control, target, num, 1.0);
 
     // 计算法向量
     let attrNormal: number[] = [],
