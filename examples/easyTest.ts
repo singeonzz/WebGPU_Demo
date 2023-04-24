@@ -2,7 +2,7 @@
  * @Author: 沈银岗 shenyingang@chuanglintech.com
  * @Date: 2023-04-23 14:35:41
  * @LastEditors: 沈银岗 shenyingang@chuanglintech.com
- * @LastEditTime: 2023-04-23 17:14:17
+ * @LastEditTime: 2023-04-24 16:14:15
  * @FilePath: \webgpu\WebGPU_Demo\examples\easyTest.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -12,7 +12,6 @@ import nodeVert from "./shaders/node.vert.wgsl";
 import nodeFrag from "./shaders/node.frag.wgsl";
 import edgeVert from "./shaders/edge.vert.wgsl";
 import edgeFrag from "./shaders/edge.frag.wgsl";
-
 
 const easyTest = async () => {
     const gpu = await InitGPU();
@@ -82,12 +81,12 @@ const easyTest = async () => {
             frontFace: "ccw",
             cullMode: "none",
         },
-        // // 深度模板
-        // depthStencil: {
-        //     format: "depth24plus",
-        //     depthWriteEnabled: true,
-        //     depthCompare: "less",
-        // },
+        // 深度模板
+        depthStencil: {
+            format: "depth24plus",
+            depthWriteEnabled: true,
+            depthCompare: "less",
+        },
     };
 
     // 管线
@@ -106,7 +105,7 @@ const easyTest = async () => {
     const vertexBuffer = CreateGPUBuffer(device, vertexData);
 
     // 绘制个数
-    const numTriangles = 10;
+    const numTriangles = 20000;
     // uniform属性
     // debugger
     const uniformBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
@@ -156,35 +155,28 @@ const easyTest = async () => {
         });
     }
 
-
     const edgeData = [];
 
     for (let i = 0; i < numTriangles - 1; i++) {
-
         let ct = {
-            x: (NodePositions[i].x + NodePositions[i+1].x) / 2,
-            y: (NodePositions[i].y + NodePositions[i+1].y) / 2,
-        }
+            x: (NodePositions[i].x + NodePositions[i + 1].x) / 2,
+            y: (NodePositions[i].y + NodePositions[i + 1].y) / 2,
+        };
 
-        edgeData.push(...calcLine(
-            NodePositions[i],
-            ct,
-            NodePositions[i+1],
-            0.005,
-            2
-        )) 
+        edgeData.push(
+            ...calcLine(NodePositions[i], ct, NodePositions[i + 1], 0.001, 2)
+        );
         // edgeData.push(
-        //     NodePositions[i].x, 
+        //     NodePositions[i].x,
         //     NodePositions[i].y,
-        //     NodePositions[i + 1].x, 
+        //     NodePositions[i + 1].x,
         //     NodePositions[i + 1].y,
         // )
-
     }
 
-    const vertexEdgeData = new Float32Array(edgeData)
+    const vertexEdgeData = new Float32Array(edgeData);
     const numberOfVertices = vertexEdgeData.length / 4;
-    
+
     // console.log(vertexEdgeData)
     // console.log(numberOfVertices)
 
@@ -230,6 +222,12 @@ const easyTest = async () => {
             frontFace: "ccw",
             cullMode: "none",
         },
+        // 深度模板
+        depthStencil: {
+            format: "depth24plus",
+            depthWriteEnabled: true,
+            depthCompare: "less",
+        },
     });
 
     const maxMappingLength =
@@ -270,11 +268,11 @@ const easyTest = async () => {
 
         let startTime: number | undefined = undefined;
 
-        // const depthTexture = device.createTexture({
-        //     size: [gpu.canvas.width, gpu.canvas.height, 1],
-        //     format: "depth24plus",
-        //     usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        // });
+        const depthTexture = device.createTexture({
+            size: [gpu.canvas.width, gpu.canvas.height, 1],
+            format: "depth24plus",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        });
 
         const renderPassDescriptor = {
             colorAttachments: [
@@ -285,19 +283,21 @@ const easyTest = async () => {
                     storeOp: "store",
                 },
             ],
-            // depthStencilAttachment: {
-            //     view: depthTexture.createView(),
-            //     depthClearValue: 1.0,
-            //     depthLoadOp: "clear",
-            //     depthStoreOp: "store",
-            // },
+            depthStencilAttachment: {
+                view: depthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: "clear",
+                depthStoreOp: "store",
+            },
         } as any;
 
         return function doDraw(timestamp: number) {
             if (startTime === undefined) {
                 startTime = timestamp;
             }
-
+            // @ts-ignore
+            document.getElementById("time").innerHTML =
+                Math.ceil((timestamp - startTime) * 1e2) / 1e2;
             let textureView = gpu.context.getCurrentTexture().createView();
             renderPassDescriptor.colorAttachments[0].view = textureView;
 
@@ -310,12 +310,12 @@ const easyTest = async () => {
             passEncoder.setPipeline(pipelineEdge);
             passEncoder.setVertexBuffer(0, vertexEdgeBuffer);
             // passEncoder.draw(numberOfVertices * 2);
-            for(let i = 0; i< numTriangles-1; i++)
+            for (let i = 0; i < numTriangles - 1; i++)
                 passEncoder.draw(4, 1, 4 * i);
-
 
             passEncoder.end();
             device.queue.submit([commandEncoder.finish()]);
+            startTime = timestamp;
         };
     }
 
